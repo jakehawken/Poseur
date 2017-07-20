@@ -71,7 +71,7 @@ class JakeFaker<Function: JakeFakeFunction> {
     func stubbedValue(_ functionName:String = #function, method: Function) -> Any? {
         guard let stubs = methodStubs[method.hashValue],
             let stub = stubs.filter({ $0.method == method}).last else {
-                fatalError("Method \(functionName) not stubbed.")
+            fatalError("Method \(functionName) not stubbed.")
         }
         return stub.execution()
     }
@@ -99,5 +99,9 @@ extension JakeFake {
             return value
         }
         fatalError("\(method) stubbed with the wrong type")
+    }
+    func recordAndStub<T>(method: Function, asType: T.Type) -> T? {
+        recordCall(method)
+        return stubbedValue(method: method, asType: asType)
     }
 }
