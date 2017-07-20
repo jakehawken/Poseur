@@ -39,18 +39,18 @@ Imagine, if you will, that you have a class called *Dog*:
 
 ```swift
 class Dog {
-    
+
     private var stomach = [DogFood]()
     private var shouldPoop = false
-    
+
     func bark() -> String {
         return "woof!"
     }
-    
+
     func eat(food: DogFood) {
         stomach.append(food)
     }
-    
+
     func digest() -> String? {
         if shouldPoop {
             let firstEaten = stomach.removeFirst()
@@ -70,7 +70,7 @@ class FakeDog: Dog, JakeFake {
         case bark
         case eat(DogFood)
         case digest
-        
+
         public static func ==(lhs: Function, rhs: Function) -> Bool {
             switch (lhs, rhs) {
             case (.eat(let food1), .eat(let food2)):
@@ -81,7 +81,7 @@ class FakeDog: Dog, JakeFake {
                 return false
             }
         }
-        
+
         public var hashValue: Int {
             switch self {
             case .bark:
@@ -93,20 +93,20 @@ class FakeDog: Dog, JakeFake {
             }
         }
     }
-    
+
     let faker: JakeFaker<Function> = JakeFaker()
-    
+
     //MARK: - overrides
-    
+
     override func bark() -> String {
         recordCall(.bark)
         return stubbedValue(method: .bark, asType: String.self)!
     }
-    
+
     override func eat(food: DogFood) {
         recordCall(.eat(food))
     }
-    
+
     override func digest() -> String? {
         recordCall(.digest)
         return stubbedValue(method: .digest, asType: String.self)
@@ -124,6 +124,23 @@ dog.eat(food: .tableScraps)
 
 dog.received(method: .eat(.tableScraps))  //evaluates to true
 ```
+##### Ignoring arguments.
+And with our *Function* type defined as we do above, we can differentiate between a method being called with specific arguments and a method being called period. To do this we set the hidden ```ignoreArguments``` parameter (it has a default value of ```false```specified), to ```true```.
+
+```swift
+let dog = FakeDog()
+dog.eat(food: .dry)
+dog.eat(food: .wet)
+
+dog.received(method: .eat(.tableScraps))                            //evaluates to false
+dog.callCountFor(method: .eat(.tableScraps))                        //evaluates to 0
+
+dog.received(method: .eat(.tableScraps), ignoreArguments: true)     //evaluates to true
+dog.callCountFor(method: .eat(.tableScraps), ignoreArguments: true) //evaluates to 2
+```
+
+For the time being, you still have to provide the associated values, but they'll be ignored, as seen above.
+
 #### Stubbing methods on our fake
 For methods on *Dog* that have return types, such as ```digest``` we can also use *JakeFake* to stub out what that method will return. So, in our setup, we can do the following:
 

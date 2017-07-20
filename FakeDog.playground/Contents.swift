@@ -6,13 +6,14 @@ import Foundation
 
 protocol JakeFakeFunction: Hashable, Equatable {
 }
+
 protocol JakeFake {
     associatedtype Function: JakeFakeFunction
     var faker: JakeFaker<Function> {get}
     func reset()
     func recordCall(_ method: Function)
-    func received(method: Function) -> Bool
-    func callCountFor(method: Function) -> Int
+    func received(method: Function, ignoreArguments: Bool) -> Bool
+    func callCountFor(method: Function, ignoreArguments: Bool) -> Int
     func stub(_ method: Function, andDo block: (()->Any?)?)
     func stubbedValue<T>(method: Function, asType: T.Type) -> T?
 }
@@ -42,12 +43,15 @@ class JakeFaker<Function: JakeFakeFunction> {
             methodCalls[method.hashValue] = [method]
         }
     }
-    func received(method: Function) -> Bool {
-        return callCountFor(method: method) > 0
+    func received(method: Function, ignoreArguments:Bool=false) -> Bool {
+        return callCountFor(method: method, ignoreArguments: ignoreArguments) > 0
     }
-    func callCountFor(method: Function) -> Int {
+    func callCountFor(method: Function, ignoreArguments:Bool=false) -> Int {
         guard let calls = methodCalls[method.hashValue] else {
             return 0
+        }
+        if ignoreArguments {
+            return calls.count
         }
         return calls.filter({ $0 == method}).count
     }
@@ -74,7 +78,6 @@ class JakeFaker<Function: JakeFakeFunction> {
 }
 
 
-
 extension JakeFake {
     func reset() {
         faker.reset()
@@ -82,11 +85,11 @@ extension JakeFake {
     func recordCall(_ method: Function) {
         faker.recordCall(method)
     }
-    func received(method: Function) -> Bool {
-        return faker.received(method: method)
+    func received(method: Function, ignoreArguments:Bool=false) -> Bool {
+        return faker.received(method: method, ignoreArguments: ignoreArguments)
     }
-    func callCountFor(method: Function) -> Int {
-        return faker.callCountFor(method: method)
+    func callCountFor(method: Function, ignoreArguments:Bool=false) -> Int {
+        return faker.callCountFor(method: method, ignoreArguments: ignoreArguments)
     }
     func stub(_ method: Function, andDo block: (()->Any?)?) {
         faker.stub(method, andDo: block)
@@ -98,6 +101,7 @@ extension JakeFake {
         fatalError("\(method) stubbed with the wrong type")
     }
 }
+
 
 
 enum DogFood {
@@ -197,3 +201,14 @@ dog.stub(.digest) { () -> Any? in
 }
 dog.digest()
 dog.received(method: .digest)
+
+dog.reset()  //THIS CLEARS ALL THE STUBS AND CALLS
+
+dog.eat(food: .dry)
+dog.eat(food: .wet)
+
+dog.received(method: .eat(.tableScraps))
+dog.callCountFor(method: .eat(.tableScraps))
+
+dog.received(method: .eat(.tableScraps), ignoreArguments: true)
+dog.callCountFor(method: .eat(.tableScraps), ignoreArguments: true)
