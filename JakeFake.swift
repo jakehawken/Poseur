@@ -13,13 +13,13 @@ protocol JakeFake {
     func recordCall(_ method: Function)
     func received(method: Function) -> Bool
     func callCountFor(method: Function) -> Int
-    func stub(_ method: Function, andDo block: (()->Any)?)
-    func stubbedValue<T>(method: Function, asType: T.Type) -> T
+    func stub(_ method: Function, andDo block: (()->Any?)?)
+    func stubbedValue<T>(method: Function, asType: T.Type) -> T?
 }
 
 class JakeFaker<Function: JakeFakeFunction> {
     
-    typealias Execution = (()->Any)
+    typealias Execution = (()->Any?)
     
     private struct Stub {
         let method: Function
@@ -64,7 +64,7 @@ class JakeFaker<Function: JakeFakeFunction> {
             methodStubs[method.hashValue] = [stub]
         }
     }
-    func stubbedValue(_ functionName:String = #function, method: Function) -> Any {
+    func stubbedValue(_ functionName:String = #function, method: Function) -> Any? {
         guard let stubs = methodStubs[method.hashValue],
             let stub = stubs.filter({ $0.method == method}).last else {
             fatalError("Method \(functionName) not stubbed.")
@@ -88,10 +88,10 @@ extension JakeFake {
     func callCountFor(method: Function) -> Int {
         return faker.callCountFor(method: method)
     }
-    func stub(_ method: Function, andDo block: (()->Any)?) {
+    func stub(_ method: Function, andDo block: (()->Any?)?) {
         faker.stub(method, andDo: block)
     }
-    func stubbedValue<T>(method: Function, asType: T.Type) -> T {
+    func stubbedValue<T>(method: Function, asType: T.Type) -> T? {
         if let value = faker.stubbedValue(method: method) as? T {
             return value
         }
