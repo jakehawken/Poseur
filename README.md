@@ -101,6 +101,7 @@ class FakeDog: Dog, JakeFake {
     override func bark() -> String {
         recordCall(.bark)
         return stubbedValue(method: .bark, asType: String.self)!
+        //stubbedValue(method:asType:) returns an optional, so it needs to be unwrapped
     }
 
     override func eat(food: DogFood) {
@@ -108,8 +109,8 @@ class FakeDog: Dog, JakeFake {
     }
 
     override func digest() -> String? {
-        recordCall(.digest)
-        return stubbedValue(method: .digest, asType: String.self)
+        return recordAndStub(method: .digest, asType: String.self)
+        // This is a convenience method which calls both recordCall and stubbedValue
     }
 }
 ```
