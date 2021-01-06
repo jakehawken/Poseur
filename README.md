@@ -42,9 +42,10 @@ class Dog {
 
     private var stomach = [DogFood]()
     private var shouldPoop = false
+    private static let barks = ["woof!", "bork!", "yip!"]
 
     func bark() -> String {
-        return "woof!"
+        return Dog.barks.randomElement() ?? "glorf?"
     }
 
     func eat(food: DogFood) {
@@ -66,42 +67,19 @@ class Dog {
 
 ```swift
 class FakeDog: Dog, JakeFake {
-    enum Function: JakeFakeFunction {
+    
+    enum Function: JakeFakeFunction, Equatable, Hashable {
         case bark
         case eat(DogFood)
         case digest
-
-        public static func ==(lhs: Function, rhs: Function) -> Bool {
-            switch (lhs, rhs) {
-            case (.eat(let food1), .eat(let food2)):
-                return food1 == food2
-            case (.bark, .bark), (.digest, .digest):
-                return true
-            default:
-                return false
-            }
-        }
-
-        public var hashValue: Int {
-            switch self {
-            case .bark:
-                return 0
-            case .eat(_):
-                return 1
-            case .digest:
-                return 2
-            }
-        }
     }
-
-    let faker: JakeFaker<Function> = JakeFaker()
+    
+    lazy var faker = JakeFaker<Function>()
 
     //MARK: - overrides
-
     override func bark() -> String {
         recordCall(.bark)
         return stubbedValue(method: .bark, asType: String.self)!
-        //stubbedValue(method:asType:) returns an optional, so it needs to be unwrapped
     }
 
     override func eat(food: DogFood) {
@@ -110,12 +88,19 @@ class FakeDog: Dog, JakeFake {
 
     override func digest() -> String? {
         return recordAndStub(method: .digest, asType: String.self)
-        // This is a convenience method which calls both recordCall and stubbedValue
     }
+    
 }
 ```
-#### Spying on our fake
-Wasn't that easy?
+
+Wasn't that easy?!
+
+Notes:
+- You'll notice that `stubbedValue(method:asType:)` returns an optional, so it needs to be unwrapped as you see in `bark()`
+- Since `eat(food:)` is a void method, `recordCall(_:)` is all we need for now
+- In `digest()`, we call `recordAndStub(method:asType:)` which is a convenience method which calls both `recordCall(_:)` and `stubbedValue(method:asType:)`
+
+### Spying on our fake
 
 Now that we have our *FakeDog* object, if we want to verify that a method has been called on *Dog*, for example: ```eat(food:)```, we can simply call ```received(method:)```:
 

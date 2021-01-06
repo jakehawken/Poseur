@@ -13,3 +13,5 @@ DerivedData/
 !default.perspectivev3
 xcuserdata/
 xcshareddata/
+
+*.DS_STORE
