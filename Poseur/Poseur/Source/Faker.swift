@@ -11,7 +11,6 @@ public extension PoseurFunction {
 }
 
 public class Faker<Function: PoseurFunction> {
-    typealias ArgsCheck = ([Any?]) -> Bool
     
     func reset() {
         methodCalls.removeAll()
@@ -39,7 +38,7 @@ public class Faker<Function: PoseurFunction> {
         }.count
     }
     
-    func callCountFor(function: Function, where argsMatch: ArgsCheck) -> Int {
+    func callCountFor(function: Function, where argsMatch: Fake.ArgsCheck) -> Int {
         return methodCalls.filter { (call) -> Bool in
             call.function == function && argsMatch(call.arguments)
         }.count
@@ -54,7 +53,7 @@ public class Faker<Function: PoseurFunction> {
         return callCountFor(function: function) > 0
     }
     
-    func received(function: Function, where argsMatch: ArgsCheck) -> Bool {
+    func received(function: Function, where argsMatch: Fake.ArgsCheck) -> Bool {
         return callCountFor(function: function, where: argsMatch) > 0
     }
     
@@ -66,8 +65,12 @@ public class Faker<Function: PoseurFunction> {
     
     private struct Stub {
         let function: Function
-        let argsCheck: ArgsCheck?
-        let execution: (()->Any?)
+        let argsCheck: Fake.ArgsCheck?
+        let execution: Fake.FunctionCall
+        
+        func argumentsPassCheck(_ args: [Any?]) -> Bool {
+            argsCheck?(args) ?? true
+        }
     }
     
     private var argsAgnosticStubs = [Function: Stub]()
@@ -75,12 +78,14 @@ public class Faker<Function: PoseurFunction> {
     
     func stub(function: Function) -> StubMaker {
         return StubMaker { [weak self] (stubbedAction) in
-            let stub = Stub(function: function, argsCheck: nil, execution: stubbedAction)
+            let stub = Stub(function: function,
+                            argsCheck: nil,
+                            execution: stubbedAction)
             self?.argsAgnosticStubs[function] = stub
         }
     }
     
-    func stub(function: Function, where argsCheck: @escaping ArgsCheck) -> StubMaker {
+    func stub(function: Function, where argsCheck: @escaping Fake.ArgsCheck) -> StubMaker {
         return StubMaker { [weak self] (stubbedAction) in
             let stub = Stub(function: function,
                             argsCheck: argsCheck,
@@ -111,23 +116,21 @@ public class Faker<Function: PoseurFunction> {
     
     func stubbedValue(forFunction function: Function, arguments: [Any?]) -> Any? {
         if let godStub = argsAgnosticStubs[function] {
-            return godStub.execution()
+            return godStub.execution(arguments)
         }
         let specificStubs = argsSpecificStubs[function]
-        let firstMatch = specificStubs?.first { (stub) -> Bool in
-            stub.argsCheck?(arguments) ?? true
-        }
+        let firstMatch = specificStubs?.first(where: { $0.argumentsPassCheck(arguments) })
         guard let specificStub = firstMatch else {
             fatalError("No stubs found for \(function).")
         }
-        return specificStub.execution()
+        return specificStub.execution(arguments)
     }
     
 }
 
 private extension Faker {
     
-    func argumentWrapperCheck(fromArgs args: [Any?]) -> ArgsCheck {
+    func argumentWrapperCheck(fromArgs args: [Any?]) -> Fake.ArgsCheck {
         let wrappers = args.map { ArgumentWrapper($0) }
         return { (arguments) -> Bool in
             guard arguments.count == wrappers.count else {
@@ -145,13 +148,13 @@ private extension Faker {
 public struct StubMaker {
     
     private(set) var actionAdded = false
-    private let callback: (@escaping () -> Any?) -> ()
+    private let callback: (@escaping Fake.FunctionCall) -> ()
     
-    fileprivate init(_ callback: @escaping (@escaping () -> Any?) -> ()) {
+    fileprivate init(_ callback: @escaping (@escaping Fake.FunctionCall) -> ()) {
         self.callback = callback
     }
     
-    public func andDo(_ action: @escaping () -> Any?) {
+    public func andDo(_ action: @escaping Fake.FunctionCall) {
         if actionAdded {
             fatalError("A callback has already beed added for this stub.")
         }
@@ -159,7 +162,7 @@ public struct StubMaker {
     }
     
     public func andReturn(_ value: Any?) {
-        andDo { () -> Any? in
+        andDo { (_) -> Any? in
             return value
         }
     }

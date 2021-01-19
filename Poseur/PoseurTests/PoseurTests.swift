@@ -78,11 +78,28 @@ class FakeTests: XCTestCase {
         XCTAssertEqual(subject.rollOntoTummy(getARub: true), "GO CRAZY")
     }
     
+    func testAndDoStubbing() {
+        subject.stub(function: .shouldFetch).andDo { (arguments) -> Bool in
+            let fetchableItem = arguments[0] as! FetchableItem
+            let familyMember = arguments[1] as! FamilyMember
+            switch (fetchableItem, familyMember) {
+            case (.slippers, .kid):
+                return true
+            default:
+                return false
+            }
+        }
+        XCTAssertTrue(subject.shouldFetch(.slippers, for: .kid))
+        XCTAssertFalse(subject.shouldFetch(.slippers, for: .parent))
+    }
+    
     func testArgumentListStubbing() {
-        subject.stub(function: .rollOntoTummy, withArguments: true).andDo { return "TRY TO BITE" }
-        subject.stub(function: .rollOntoTummy, withArguments: false).andDo { return "GROWL" }
-        XCTAssertEqual(subject.rollOntoTummy(getARub: true), "TRY TO BITE")
-        XCTAssertEqual(subject.rollOntoTummy(getARub: false), "GROWL")
+        subject.stub(function: .shouldFetch, withArguments: FetchableItem.slippers, FamilyMember.kid).andReturn(true)
+        subject.stub(function: .shouldFetch, withArguments: FetchableItem.ball, FamilyMember.parent).andReturn(false)
+        subject.stub(function: .shouldFetch, withArguments: FetchableItem.ball, FamilyMember.kid).andReturn(true)
+        XCTAssertEqual(subject.shouldFetch(.slippers, for: .kid), true)
+        XCTAssertEqual(subject.shouldFetch(.ball, for: .parent), false)
+        XCTAssertEqual(subject.shouldFetch(.ball, for: .kid), true)
     }
     
     func testGenericStubOverridesSpecificStub() {

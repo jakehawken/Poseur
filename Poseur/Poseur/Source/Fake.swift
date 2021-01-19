@@ -9,7 +9,7 @@ public protocol PoseurFunction: Hashable, RawRepresentable where RawValue == Str
 
 public protocol Fake {
     typealias ArgsCheck = ([Any?]) -> Bool
-    typealias MethodExecution = () -> Any?
+    typealias FunctionCall = ([Any?]) -> Any?
     
     associatedtype Function: PoseurFunction
     var faker: Faker<Function> {get}
@@ -38,10 +38,6 @@ public extension Fake {
     
     func recordCall(_ function: Function, arguments: Any?...) {
         faker.recordCall(function, arguments: arguments)
-    }
-    
-    fileprivate func recordCall(_ function: Function, argumentsArray: [Any?]) {
-        faker.recordCall(function, arguments: argumentsArray)
     }
     
     func received(function: Function) -> Bool {
@@ -85,6 +81,14 @@ public extension Fake {
             fatalError("\(function) stubbed with the wrong type")
         }
         return value
+    }
+    
+}
+
+private extension Fake {
+    
+    func recordCall(_ function: Function, argumentsArray: [Any?]) {
+        faker.recordCall(function, arguments: argumentsArray)
     }
     
 }
