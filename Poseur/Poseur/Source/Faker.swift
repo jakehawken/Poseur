@@ -85,7 +85,7 @@ public class Faker<Function: PoseurFunction> {
         }
     }
     
-    func stub(function: Function, where argsCheck: @escaping Fake.ArgsCheck) -> StubMaker {
+    func stub(function: Function, where argsCheck: @escaping Fake.ArgsCheck) -> AndReturnable {
         return StubMaker { [weak self] (stubbedAction) in
             let stub = Stub(function: function,
                             argsCheck: argsCheck,
@@ -145,7 +145,7 @@ private extension Faker {
     
 }
 
-public struct StubMaker {
+struct StubMaker: Stubbable {
     
     private(set) var actionAdded = false
     private let callback: (@escaping Fake.FunctionCall) -> ()
@@ -154,17 +154,25 @@ public struct StubMaker {
         self.callback = callback
     }
     
-    public func andDo(_ action: @escaping Fake.FunctionCall) {
+    func andDo(_ action: @escaping Fake.FunctionCall) {
         if actionAdded {
             fatalError("A callback has already beed added for this stub.")
         }
         callback(action)
     }
     
-    public func andReturn(_ value: Any?) {
+    func andReturn(_ value: Any?) {
         andDo { (_) -> Any? in
             return value
         }
     }
     
+}
+
+public protocol AndReturnable {
+    func andReturn(_ value: Any?)
+}
+
+public protocol Stubbable: AndReturnable {
+    func andDo(_ action: @escaping Fake.FunctionCall)
 }

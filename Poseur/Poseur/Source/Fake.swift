@@ -23,8 +23,9 @@ public protocol Fake {
     func received(function: Function, where argsMatch: ArgsCheck) -> Bool
     
     // Stubbing
-    func stub(function: Function) -> StubMaker
-    func stub(function: Function, where argsCheck: @escaping ArgsCheck) -> StubMaker
+    func stub(function: Function) -> Stubbable
+    func stub(function: Function, where argsCheck: @escaping ArgsCheck) -> AndReturnable
+    func stub(function: Function, withArguments args: Any?...) -> AndReturnable
     func stubbedValue<T>(forFunction function: Function, asType: T.Type, arguments: [Any?]) -> T
 }
 
@@ -64,15 +65,15 @@ public extension Fake {
         return faker.callCountForFunction(function, withArguments: args)
     }
     
-    func stub(function: Function) -> StubMaker {
+    func stub(function: Function) -> Stubbable {
         faker.stub(function: function)
     }
     
-    func stub(function: Function, where argsCheck: @escaping ArgsCheck) -> StubMaker {
+    func stub(function: Function, where argsCheck: @escaping ArgsCheck) -> AndReturnable {
         faker.stub(function: function, where: argsCheck)
     }
     
-    func stub(function: Function, withArguments args: Any?...) -> StubMaker {
+    func stub(function: Function, withArguments args: Any?...) -> AndReturnable {
         faker.stub(function: function, withArgs: args)
     }
     
