@@ -1,41 +1,26 @@
-# JakeFake
-A bare-bones class and protocol for creating test fakes for stubbing/spying in Swift.
+# Poseur
 
-Inspired by (the MUCH more fully-featured framework) Spry: https://github.com/Rivukis/Spry
+When writing unit tests, we want to test specific units of code, decoupled from the actual state of our application. To do this, we simulate the other units of code with which the subject communicates. Doing this is referred to as putting the subject into a “test harness.”
 
-__Table of Contents__
+These simulated units of code are what we generally call “fakes.” They allow the test code to change the conditions around the subject to replicate known app states/conditions, such as the success or failure of a network call, or a specific state on a helper class. Changing how these fakes respond to being interacted with by the subject is called “stubbing” and recording whether or methods or properties have on the fake have been accessed is called “spying.”
 
-* [The Cast of Characters](#the-cast-of-characters)
-    * [JakeFaker object](#jakefaker-object)
-    * [JakeFake protocol](#jakefake-protocol)
-* [A bit of advice](#a-bit-of-advice)
-* [How to Use](#how-to-use)
-    * [Conforming to JakeFake](#conforming-to-jakefake)
-    * [Spying on our fake](#spying-on-our-fake)
-    * [Stubbing methods on our fake](#stubbing-methods-on-our-fake)
+Poseur is a bare-bones class and protocol for creating test fakes for stubbing/spying in Swift, inspired by the (more fully-featured framework) [Spry](https://github.com/Rivukis/Spry) framework.
 
 ## The Cast of Characters
-JakeFake has two main components:
+Poseur has two main components:
 
-#### JakeFaker object
-This object encapsulates most of the JakeFake functionality. It works as a helper object to manage the spying and stubbing for a given fake. It has a generic *Function* type which allows the user to implement any kind of object to define their method captures as long as that object conforms to *JakeFakeFunction* which simply is a bundling of the *Equatable* and *Hashable* protocols.
+#### The `Faker<Function>` object
+This object encapsulates most of the JakeFake functionality. It works as a helper object to manage the spying and stubbing for a given fake. It has a generic *Function* type which allows the user to implement any kind of object to define their method captures as long as that object conforms to `PoseurFunction` which simply is a bundling of the *Equatable* and *Hashable* protocols.
 
-#### JakeFake protocol
-This protocol is what your fake objects will actually conform to. It's designed to closely mirror the *JakeFaker* object, so that in tests you can inspect the fake itself rather than having to inspect its ```.faker``` property. Since the majority of the protocol is intended to be passthrough to the faker, I have included a protocol extension which does exactly that. And thanks to that, all one needs to do to conform to the *JakeFake* is to define their ```Function``` type, and implement the ```faker``` property, which will include that type as its generic.
+#### The `Fake` protocol
+This protocol is what your fake objects will actually conform to. It's designed to closely mirror the `Faker<Function>` object, so that in tests you can inspect the fake itself rather than having to inspect its `.faker` property. Since the majority of the protocol is intended to be passthrough to the faker, I have included a protocol extension which does exactly that. And thanks to that, all one needs to do to conform to the *JakeFake* is to define their `Function` type, and implement the ```faker``` property, which will include that type as its generic. I've even created a convenience extension method to `Function` so that all one need to do to implement that property is add this line: `let faker = Function.faker()`
 
 ## A bit of advice
-When you define your *Function* type, I recommend using an ```enum```, as it gives you a finite set of cases, each corresponding to a given method, which you can configure any number of ways. Swift enum associated values are also an excellent tool for capturing the arguments of the methods. This gives you a strong typing for the capturing and comparing of method calls. For example, a method with the signature
-```swift
-func doStuff(toString string:String, doOtherStuff:Bool) -> String
-```
-would have a corresponded case in the enum
-```swift
-case doStuff(String, Bool)
-```
+When you define your `Function` type, I recommend using an enum, as it gives you a finite set of cases, each corresponding to a given method.
 
 ## How to Use
 
-Imagine, if you will, that you have a class called *Dog*:
+Imagine, if you will, that you have a class called `Dog`:
 
 ```swift
 class Dog {
@@ -60,34 +45,49 @@ class Dog {
         shouldPoop = !shouldPoop
         return nil
     }
+    
+    func rollOntoTummy(getARub: Bool) -> String {
+        if getARub {
+            return "Panting sounds..."
+        }
+        return "Whimpering"
+    }
+    
 }
 ```
 #### Conforming to JakeFake
-*Dog* is a depency in a class, *HappyFamily*, that you're testing. As such, you want to generate a fake so that you can control *Dog*'s behavior in your tests. *JakeFake* allows you to create a fake simply by creating a subclass of Dog that conforms to the *JakeFake* protocol, and overriding its methods. Check it out!
+Now imagine that `Dog` is a depency in a class, `HappyFamily`, that you're testing. As such, you want to generate a fake so that you can control `Dog`'s behavior in your tests. Poseur allows you to create a fake simply by creating a subclass of `Dog` that conforms to the `Fake` protocol, and then overriding its methods. Check it out!
 
 ```swift
-class FakeDog: Dog, JakeFake {
+class FakeDog: Dog, Fake {
     
-    enum Function: JakeFakeFunction, Equatable, Hashable {
+    enum Function: String, PoseurFunction {
         case bark
-        case eat(DogFood)
+        case eat
         case digest
+        case rollOntoTummy
     }
     
-    lazy var faker = JakeFaker<Function>()
+    lazy var faker = Function.faker()
 
     //MARK: - overrides
+    
     override func bark() -> String {
-        recordCall(.bark)
-        return stubbedValue(method: .bark, asType: String.self)!
+        return recordAndStub(function: .bark,
+                             asType: String.self)
     }
 
     override func eat(food: DogFood) {
-        recordCall(.eat(food))
+        recordCall(.eat, arguments: food)
     }
 
     override func digest() -> String? {
-        return recordAndStub(method: .digest, asType: String.self)
+        return recordAndStub(function: .digest)
+    }
+    
+    override func rollOntoTummy(getARub: Bool) -> String {
+        return recordAndStub(function: .rollOntoTummy,
+                             arguments: getARub)
     }
     
 }
@@ -96,54 +96,18 @@ class FakeDog: Dog, JakeFake {
 Wasn't that easy?!
 
 Notes:
-- You'll notice that `stubbedValue(method:asType:)` returns an optional, so it needs to be unwrapped as you see in `bark()`
-- Since `eat(food:)` is a void method, `recordCall(_:)` is all we need for now
-- In `digest()`, we call `recordAndStub(method:asType:)` which is a convenience method which calls both `recordCall(_:)` and `stubbedValue(method:asType:)`
+- In `digest()`, `bark()`, and `rollOntoTummy(getARub:)`, we call `recordAndStub<T>(function:asType:arguments:)` which is a convenience method that calls both `recordCall(_:)` and `stubbedValue(forFunction:asType:arguments:)`. Ultimately allowing us to spy on arguments called 
+- Since `eat(food:)` is a void method, and we're not wanting to trigger any special behavior for now, `recordCall(_:)` is all we need.
 
 ### Spying on our fake
 
-Now that we have our *FakeDog* object, if we want to verify that a method has been called on *Dog*, for example: ```eat(food:)```, we can simply call ```received(method:)```:
-
-```swift
-let dog = FakeDog()
-dog.eat(food: .tableScraps)
-
-dog.received(method: .eat(.tableScraps))  //evaluates to true
-```
-##### Ignoring arguments.
-And with our *Function* type defined as we do above, we can differentiate between a method being called with specific arguments and a method being called period. To do this we set the hidden ```ignoreArguments``` parameter (it has a default value of ```false```specified), to ```true```.
-
-```swift
-let dog = FakeDog()
-dog.eat(food: .dry)
-dog.eat(food: .wet)
-
-dog.received(method: .eat(.tableScraps))                            //evaluates to false
-dog.callCountFor(method: .eat(.tableScraps))                        //evaluates to 0
-
-dog.received(method: .eat(.tableScraps), ignoreArguments: true)     //evaluates to true
-dog.callCountFor(method: .eat(.tableScraps), ignoreArguments: true) //evaluates to 2
-```
-
-For the time being, you still have to provide the associated values, but they'll be ignored, as seen above.
+[THIS SECTION COMING SOON]
 
 #### Stubbing methods on our fake
-For methods on *Dog* that have return types, such as ```digest``` we can also use *JakeFake* to stub out what that method will return. So, in our setup, we can do the following:
 
-```swift
-dog.stub(.digest) { () -> Any? in
-    return "Upset tummy"
-}
-```
-
-And as the following code will evaluate as shown:
-
-```swift
-dog.digest()  //evaluates to "Upset tummy", the stubbed value above
-dog.received(method: .digest)  //evaluates to true
-```
+[THIS SECTION COMING SOON]
 
 ### Thanks!
 And that's about it! Feel free to ask me all about it, and report any bugs you find.
 
-And in the meantime, if you want a more stable, strongly-type, fully-featured stubbing/spying framework, be sure to install the Spry framework in your next Swift project: https://github.com/Rivukis/Spry
+And in the meantime, if you want a more stable, strongly-typed, fully-featured stubbing/spying framework, be sure to install the Spry framework in your next Swift project: https://github.com/Rivukis/Spry
