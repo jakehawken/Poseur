@@ -57,6 +57,13 @@ class FakeTests: XCTestCase {
         XCTAssertEqual(callCountForFalse, 1)
     }
     
+    func testArgumentListSpying() {
+        subject.stub(function: .shouldFetch).andReturn(false)
+        _ = subject.shouldFetch(.slippers, for: .parent)
+        XCTAssertTrue(subject.receivedCall(toFunction: .shouldFetch, withArguments: FetchableItem.slippers, FamilyMember.parent))
+        XCTAssertFalse(subject.receivedCall(toFunction: .shouldFetch, withArguments: FetchableItem.ball, FamilyMember.kid))
+    }
+    
     func testSimpleStubbing() {
         subject.stub(function: .bark).andReturn("Meow")
         XCTAssertEqual(subject.bark(), "Meow")
@@ -64,18 +71,18 @@ class FakeTests: XCTestCase {
         XCTAssertEqual(subject.bark(), "Moo")
     }
     
-    func testArgumentListStubbing() {
-        subject.stub(function: .rollOntoTummy, withArguments: true).andDo { return "TRY TO BITE" }
-        subject.stub(function: .rollOntoTummy, withArguments: false).andDo { return "GROWL" }
-        XCTAssertEqual(subject.rollOntoTummy(getARub: true), "TRY TO BITE")
-        XCTAssertEqual(subject.rollOntoTummy(getARub: false), "GROWL")
-    }
-    
     func testArgsCheckStubbing() {
         subject.stub(function: .rollOntoTummy, where: { ($0[0] as? Bool) == false }).andReturn("HOWL")
         subject.stub(function: .rollOntoTummy, where: { ($0[0] as? Bool) == true }).andReturn("GO CRAZY")
         XCTAssertEqual(subject.rollOntoTummy(getARub: false), "HOWL")
         XCTAssertEqual(subject.rollOntoTummy(getARub: true), "GO CRAZY")
+    }
+    
+    func testArgumentListStubbing() {
+        subject.stub(function: .rollOntoTummy, withArguments: true).andDo { return "TRY TO BITE" }
+        subject.stub(function: .rollOntoTummy, withArguments: false).andDo { return "GROWL" }
+        XCTAssertEqual(subject.rollOntoTummy(getARub: true), "TRY TO BITE")
+        XCTAssertEqual(subject.rollOntoTummy(getARub: false), "GROWL")
     }
     
     func testGenericStubOverridesSpecificStub() {
@@ -95,6 +102,7 @@ class FakeDog: Dog, Fake {
         case eat
         case digest
         case rollOntoTummy
+        case shouldFetch
     }
     
     lazy var faker = Function.faker()
@@ -118,6 +126,10 @@ class FakeDog: Dog, Fake {
                              arguments: getARub)
     }
     
+    override func shouldFetch(_ item: FetchableItem, for familyMember: FamilyMember) -> Bool {
+        return recordAndStub(function: .shouldFetch, arguments: item, familyMember)
+    }
+    
 }
 
 enum DogFood: Equatable, Hashable {
@@ -128,6 +140,16 @@ enum DogFood: Equatable, Hashable {
     var digested: String {
         self == .tableScraps ? "Sick puppy." : "Poop."
     }
+}
+
+enum FetchableItem: Equatable {
+    case ball
+    case slippers
+}
+
+enum FamilyMember: Equatable {
+    case parent
+    case kid
 }
 
 class Dog {
@@ -158,6 +180,15 @@ class Dog {
             return "Panting sounds..."
         }
         return "Whimpering"
+    }
+    
+    func shouldFetch(_ item: FetchableItem, for familyMember: FamilyMember) -> Bool {
+        switch (item, familyMember) {
+        case (.slippers, .kid):
+            return false
+        default:
+            return true
+        }
     }
     
 }
