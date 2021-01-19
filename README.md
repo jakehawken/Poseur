@@ -55,6 +55,15 @@ class Dog {
         return "Whimpering"
     }
     
+    func shouldFetch(_ item: FetchableItem, for familyMember: FamilyMember) -> Bool {
+        switch (item, familyMember) {
+        case (.slippers, .kid):
+            return false
+        default:
+            return true
+        }
+    }
+    
 }
 ```
 
@@ -70,6 +79,7 @@ class FakeDog: Dog, Fake {
         case eat
         case digest
         case rollOntoTummy
+        case shouldFetch
     }
     
     lazy var faker = Function.faker()
@@ -77,8 +87,7 @@ class FakeDog: Dog, Fake {
     //MARK: - overrides
     
     override func bark() -> String {
-        return recordAndStub(function: .bark,
-                             asType: String.self)
+        return recordAndStub(function: .bark)
     }
 
     override func eat(food: DogFood) {
@@ -92,6 +101,10 @@ class FakeDog: Dog, Fake {
     override func rollOntoTummy(getARub: Bool) -> String {
         return recordAndStub(function: .rollOntoTummy,
                              arguments: getARub)
+    }
+    
+    override func shouldFetch(_ item: FetchableItem, for familyMember: FamilyMember) -> Bool {
+        return recordAndStub(function: .shouldFetch, arguments: item, familyMember)
     }
     
 }
