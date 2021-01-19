@@ -14,11 +14,14 @@ struct ArgumentWrapper {
             guard ArgumentWrapper.argTypesMatch(value, rhs: input) else {
                 return false
             }
+            if let anyEqValue = value as? AnyEquatable {
+                return anyEqValue.isEqualTo(input)
+            }
+            if let anyEqOther = input as? AnyEquatable {
+                return anyEqOther.isEqualTo(value)
+            }
             if let objValue = value as? AnyClass, let objInput = input as? AnyClass {
                 return objValue === objInput
-            }
-            if let anyEqSelf = value as? AnyEquatable {
-                return anyEqSelf.isEqualTo(input)
             }
             return String(describing: value) == String(describing: input)
         }

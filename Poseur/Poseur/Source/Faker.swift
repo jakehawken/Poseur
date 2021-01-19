@@ -49,15 +49,15 @@ public class Faker<Function: PoseurFunction> {
         return callCountFor(function: function, where: argsCheck)
     }
     
-    func received(function: Function) -> Bool {
+    func receivedCall(to function: Function) -> Bool {
         return callCountFor(function: function) > 0
     }
     
-    func received(function: Function, where argsMatch: Fake.ArgsCheck) -> Bool {
+    func receivedCall(to function: Function, where argsMatch: Fake.ArgsCheck) -> Bool {
         return callCountFor(function: function, where: argsMatch) > 0
     }
     
-    func receivedCall(toFunction function: Function, withArguments args: [Any?]) -> Bool {
+    func receivedCall(to function: Function, withArguments args: [Any?]) -> Bool {
         return callCountForFunction(function, withArguments: args) > 0
     }
     

@@ -24,9 +24,9 @@ class FakeTests: XCTestCase {
         subject.eat(food: .canned)
         subject.eat(food: .canned)
         subject.eat(food: .canned)
-        XCTAssertTrue(subject.received(function: .eat))
+        XCTAssertTrue(subject.receivedCall(to: .eat))
         XCTAssertEqual(subject.callCountFor(function: .eat), 3)
-        XCTAssertFalse(subject.received(function: .bark))
+        XCTAssertFalse(subject.receivedCall(to: .bark))
         XCTAssertEqual(subject.callCountFor(function: .bark), 0)
     }
     
@@ -36,7 +36,7 @@ class FakeTests: XCTestCase {
         _ = subject.rollOntoTummy(getARub: false)
         _ = subject.rollOntoTummy(getARub: true)
         
-        let receivedWithTrue = subject.received(function: .rollOntoTummy) { (arguments) -> Bool in
+        let receivedWithTrue = subject.receivedCall(to: .rollOntoTummy) { (arguments) -> Bool in
             (arguments[0] as? Bool) == true
         }
         XCTAssertTrue(receivedWithTrue)
@@ -46,7 +46,7 @@ class FakeTests: XCTestCase {
         }
         XCTAssertEqual(callCountForTrue, 2)
         
-        let receivedWithFalse = subject.received(function: .rollOntoTummy) { (arguments) -> Bool in
+        let receivedWithFalse = subject.receivedCall(to: .rollOntoTummy) { (arguments) -> Bool in
             (arguments[0] as? Bool) == false
         }
         XCTAssertTrue(receivedWithFalse)
@@ -60,8 +60,8 @@ class FakeTests: XCTestCase {
     func testArgumentListSpying() {
         subject.stub(function: .shouldFetch).andReturn(false)
         _ = subject.shouldFetch(.slippers, for: .parent)
-        XCTAssertTrue(subject.receivedCall(toFunction: .shouldFetch, withArguments: FetchableItem.slippers, FamilyMember.parent))
-        XCTAssertFalse(subject.receivedCall(toFunction: .shouldFetch, withArguments: FetchableItem.ball, FamilyMember.kid))
+        XCTAssertTrue(subject.receivedCall(to: .shouldFetch, withArguments: FetchableItem.slippers, FamilyMember.parent))
+        XCTAssertFalse(subject.receivedCall(to: .shouldFetch, withArguments: FetchableItem.ball, FamilyMember.kid))
     }
     
     func testSimpleStubbing() {

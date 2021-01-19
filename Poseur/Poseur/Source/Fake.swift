@@ -19,8 +19,10 @@ public protocol Fake {
     func recordCall(_ function: Function, arguments: Any?...)
     func callCountFor(function: Function) -> Int
     func callCountFor(function: Function, where argsMatch: ArgsCheck) -> Int
-    func received(function: Function) -> Bool
-    func received(function: Function, where argsMatch: ArgsCheck) -> Bool
+    func callCountFor(function: Function, withArguments args: Any?...) -> Int
+    func receivedCall(to function: Function) -> Bool
+    func receivedCall(to function: Function, where argsMatch: ArgsCheck) -> Bool
+    func receivedCall(to function: Function, withArguments args: Any?...) -> Bool
     
     // Stubbing
     func stub(function: Function) -> Stubbable
@@ -41,16 +43,16 @@ public extension Fake {
         faker.recordCall(function, arguments: arguments)
     }
     
-    func received(function: Function) -> Bool {
-        return faker.received(function: function)
+    func receivedCall(to function: Function) -> Bool {
+        return faker.receivedCall(to: function)
     }
     
-    func received(function: Function, where argsMatch: ArgsCheck) -> Bool {
-        return faker.received(function: function, where: argsMatch)
+    func receivedCall(to function: Function, where argsMatch: ArgsCheck) -> Bool {
+        return faker.receivedCall(to: function, where: argsMatch)
     }
     
-    func receivedCall(toFunction function: Function, withArguments args: Any?...) -> Bool {
-        return faker.receivedCall(toFunction: function, withArguments: args)
+    func receivedCall(to function: Function, withArguments args: Any?...) -> Bool {
+        return faker.receivedCall(to: function, withArguments: args)
     }
     
     func callCountFor(function: Function) -> Int {
@@ -61,7 +63,7 @@ public extension Fake {
         return faker.callCountFor(function: function, where: argsMatch)
     }
     
-    func callCountForFunction(_ function: Function, withArguments args: Any?...) -> Int {
+    func callCountFor(function: Function, withArguments args: Any?...) -> Int {
         return faker.callCountForFunction(function, withArguments: args)
     }
     
