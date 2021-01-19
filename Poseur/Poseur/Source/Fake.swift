@@ -25,7 +25,6 @@ public protocol Fake {
     // Stubbing
     func stub(function: Function) -> StubMaker
     func stub(function: Function, where argsCheck: @escaping ArgsCheck) -> StubMaker
-    func stub(function: Function, withArguments args: Any?...) -> StubMaker
     func stubbedValue<T>(forFunction function: Function, asType: T.Type, arguments: [Any?]) -> T
 }
 
@@ -49,12 +48,20 @@ public extension Fake {
         return faker.received(function: function, where: argsMatch)
     }
     
+    func receivedCall(toFunction function: Function, withArguments args: Any?...) -> Bool {
+        return faker.receivedCall(toFunction: function, withArguments: args)
+    }
+    
     func callCountFor(function: Function) -> Int {
         return faker.callCountFor(function: function)
     }
     
     func callCountFor(function: Function, where argsMatch: ArgsCheck) -> Int {
         return faker.callCountFor(function: function, where: argsMatch)
+    }
+    
+    func callCountForFunction(_ function: Function, withArguments args: Any?...) -> Int {
+        return faker.callCountForFunction(function, withArguments: args)
     }
     
     func stub(function: Function) -> StubMaker {
@@ -80,8 +87,8 @@ public extension Fake {
 
 public extension Fake {
     
-    /// A convenience method which calls both `recordCall(_:)` and `stubbedValue(method:asType:)`
-    func recordAndStub<T>(function: Function, asType: T.Type, arguments: Any?...) -> T {
+    /// A convenience method which calls both `recordCall(_:)` and `stubbedValue(forFunction:asType:arguments:)`
+    func recordAndStub<T>(function: Function, asType: T.Type = T.self, arguments: Any?...) -> T {
         recordCall(function)
         return stubbedValue(forFunction: function, asType: T.self, arguments: arguments)
     }

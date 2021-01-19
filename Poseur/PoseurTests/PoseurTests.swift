@@ -63,8 +63,9 @@ class FakeDog: Dog, Fake {
     lazy var faker = Function.faker()
 
     //MARK: - overrides
+    
     override func bark() -> String {
-        return recordAndStub(function: .bark, asType: String.self)
+        return recordAndStub(function: .bark)
     }
 
     override func eat(food: DogFood) {
@@ -72,12 +73,11 @@ class FakeDog: Dog, Fake {
     }
 
     override func digest() -> String? {
-        return recordAndStub(function: .digest, asType: String.self)
+        return recordAndStub(function: .digest)
     }
     
     override func rollOntoTummy(getARub: Bool) -> String {
         return recordAndStub(function: .rollOntoTummy,
-                             asType: String.self,
                              arguments: getARub)
     }
     

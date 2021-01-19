@@ -45,12 +45,21 @@ public class Faker<Function: PoseurFunction> {
         }.count
     }
     
+    func callCountForFunction(_ function: Function, withArguments args: Any?...) -> Int {
+        let argsCheck = argumentWrapperCheck(fromArgs: args)
+        return callCountFor(function: function, where: argsCheck)
+    }
+    
     func received(function: Function) -> Bool {
         return callCountFor(function: function) > 0
     }
     
     func received(function: Function, where argsMatch: ArgsCheck) -> Bool {
         return callCountFor(function: function, where: argsMatch) > 0
+    }
+    
+    func receivedCall(toFunction function: Function, withArguments args: Any?...) -> Bool {
+        return callCountForFunction(function, withArguments: args) > 0
     }
     
     //MARK: Stubbing
