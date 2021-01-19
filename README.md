@@ -4,7 +4,7 @@ When writing unit tests, we want to test specific units of code, decoupled from 
 
 These simulated units of code are what we generally call “fakes.” They allow the test code to change the conditions around the subject to replicate known app states/conditions, such as the success or failure of a network call, or a specific state on a helper class. Changing how these fakes respond to being interacted with by the subject is called “stubbing” and recording whether or methods or properties have on the fake have been accessed is called “spying.”
 
-Poseur is a bare-bones class and protocol for creating test fakes for stubbing/spying in Swift, inspired by the (more fully-featured framework) [Spry](https://github.com/Rivukis/Spry) framework.
+Poseur is a class and protocol for creating test fakes for stubbing/spying in Swift, inspired by the (more fully-featured framework) [Spry](https://github.com/Rivukis/Spry) framework.
 
 ## The Cast of Characters
 
