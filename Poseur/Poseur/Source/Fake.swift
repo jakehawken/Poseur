@@ -16,7 +16,7 @@ public protocol Fake {
     func reset()
     
     // Spying
-    func recordCall(_ method: Function, arguments: Any?...)
+    func recordCall(_ function: Function, arguments: Any?...)
     func callCountFor(function: Function) -> Int
     func callCountFor(function: Function, where argsMatch: ArgsCheck) -> Int
     func received(function: Function) -> Bool
@@ -36,8 +36,12 @@ public extension Fake {
     
     // Spying
     
-    func recordCall(_ method: Function, arguments: Any?...) {
-        faker.recordCall(method, arguments: arguments)
+    func recordCall(_ function: Function, arguments: Any?...) {
+        faker.recordCall(function, arguments: arguments)
+    }
+    
+    fileprivate func recordCall(_ function: Function, argumentsArray: [Any?]) {
+        faker.recordCall(function, arguments: argumentsArray)
     }
     
     func received(function: Function) -> Bool {
@@ -89,7 +93,7 @@ public extension Fake {
     
     /// A convenience method which calls both `recordCall(_:)` and `stubbedValue(forFunction:asType:arguments:)`
     func recordAndStub<T>(function: Function, asType: T.Type = T.self, arguments: Any?...) -> T {
-        recordCall(function)
+        recordCall(function, argumentsArray: arguments)
         return stubbedValue(forFunction: function, asType: T.self, arguments: arguments)
     }
     

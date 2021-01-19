@@ -20,6 +20,43 @@ class FakeTests: XCTestCase {
         subject = nil
     }
     
+    func testSimpleSpying() {
+        subject.eat(food: .canned)
+        subject.eat(food: .canned)
+        subject.eat(food: .canned)
+        XCTAssertTrue(subject.received(function: .eat))
+        XCTAssertEqual(subject.callCountFor(function: .eat), 3)
+        XCTAssertFalse(subject.received(function: .bark))
+        XCTAssertEqual(subject.callCountFor(function: .bark), 0)
+    }
+    
+    func testArgsCheckSpying() {
+        subject.stub(function: .rollOntoTummy).andReturn("Tail wag")
+        _ = subject.rollOntoTummy(getARub: true)
+        _ = subject.rollOntoTummy(getARub: false)
+        _ = subject.rollOntoTummy(getARub: true)
+        
+        let receivedWithTrue = subject.received(function: .rollOntoTummy) { (arguments) -> Bool in
+            (arguments[0] as? Bool) == true
+        }
+        XCTAssertTrue(receivedWithTrue)
+        
+        let callCountForTrue = subject.callCountFor(function: .rollOntoTummy) { (arguments) -> Bool in
+            (arguments[0] as? Bool) == true
+        }
+        XCTAssertEqual(callCountForTrue, 2)
+        
+        let receivedWithFalse = subject.received(function: .rollOntoTummy) { (arguments) -> Bool in
+            (arguments[0] as? Bool) == false
+        }
+        XCTAssertTrue(receivedWithFalse)
+        
+        let callCountForFalse = subject.callCountFor(function: .rollOntoTummy) { (arguments) -> Bool in
+            (arguments[0] as? Bool) == false
+        }
+        XCTAssertEqual(callCountForFalse, 1)
+    }
+    
     func testSimpleStubbing() {
         subject.stub(function: .bark).andReturn("Meow")
         XCTAssertEqual(subject.bark(), "Meow")
