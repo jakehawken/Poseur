@@ -16,6 +16,8 @@
 		1680ACC425B4E91700C4D940 /* Faker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1680ACC325B4E91700C4D940 /* Faker.swift */; };
 		16828C7825B6B99800DFD2DF /* ArgumentWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16828C7725B6B99800DFD2DF /* ArgumentWrapper.swift */; };
 		16828C7C25B6C40B00DFD2DF /* AnyEquatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16828C7B25B6C40B00DFD2DF /* AnyEquatable.swift */; };
+		238C91CE2655C651008D3A99 /* Fake+Convenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 238C91CD2655C651008D3A99 /* Fake+Convenience.swift */; };
+		238C91D22656BAA1008D3A99 /* FakeHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 238C91D12656BAA1008D3A99 /* FakeHelpers.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +44,8 @@
 		1680ACC325B4E91700C4D940 /* Faker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Faker.swift; sourceTree = "<group>"; };
 		16828C7725B6B99800DFD2DF /* ArgumentWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgumentWrapper.swift; sourceTree = "<group>"; };
 		16828C7B25B6C40B00DFD2DF /* AnyEquatable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyEquatable.swift; sourceTree = "<group>"; };
+		238C91CD2655C651008D3A99 /* Fake+Convenience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Fake+Convenience.swift"; sourceTree = "<group>"; };
+		238C91D12656BAA1008D3A99 /* FakeHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeHelpers.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,9 +118,11 @@
 			isa = PBXGroup;
 			children = (
 				1680ACBB25B4E90200C4D940 /* Fake.swift */,
+				238C91CD2655C651008D3A99 /* Fake+Convenience.swift */,
 				1680ACC325B4E91700C4D940 /* Faker.swift */,
 				16828C7725B6B99800DFD2DF /* ArgumentWrapper.swift */,
 				16828C7B25B6C40B00DFD2DF /* AnyEquatable.swift */,
+				238C91D12656BAA1008D3A99 /* FakeHelpers.swift */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -220,11 +226,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				238C91CE2655C651008D3A99 /* Fake+Convenience.swift in Sources */,
 				16828C7825B6B99800DFD2DF /* ArgumentWrapper.swift in Sources */,
 				1680ACBC25B4E90200C4D940 /* Fake.swift in Sources */,
 				1680AC8F25B4E8B600C4D940 /* ContentView.swift in Sources */,
 				16828C7C25B6C40B00DFD2DF /* AnyEquatable.swift in Sources */,
 				1680AC8D25B4E8B600C4D940 /* PoseurApp.swift in Sources */,
+				238C91D22656BAA1008D3A99 /* FakeHelpers.swift in Sources */,
 				1680ACC425B4E91700C4D940 /* Faker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

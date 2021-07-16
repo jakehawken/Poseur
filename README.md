@@ -172,17 +172,14 @@ This approach allows us to pass in a custom validation block that validates the 
 
 ## 3. Argument List
 
-This is the "automagic" option. Since arguments are passed to Poseur as `[Any?]` arrays, type checking can be very challenging. The argument list approach (for both spying and stubbing) does the following steps:
+This is the "automagic" option. Since arguments are passed to Poseur as `[Any?]` arrays, type checking can be very challenging. The default implementation evaluates the arguments in the following priority order:
 
-1. If the two arguments are diffrent types, return false
-2. If the argument in the recorded call conforms to `AnyEquatable`, it uses that. (More on this in a bit.)
-3. If the arguments are both classes, pointer comparison (`===`) is employed.
+1. The types are checked, and if the arguments are two diffrent types, it return `false`.
+2. If the argument in the recorded call conforms to `AnyEquatable`, it evaluates equality based on that.
+3. If the arguments are both classes, pointer comparison (`===`) is employed. And finally, if none of that works,
+4. Both arguments are interpolated into strings and the strings are compared to one another.
 
-And finally, if none of that works,
-
-4. The two arguments are interpolated into strings, and the strings are compared to one another.
-
-`AnyEquatable` has one method: `func isEqualTo(_ other: Any?) -> Bool` allowing it to be compared to anything. It has a default implementation if the conforming type is already `Equatable`, which means that all you have to do to get an `Equatbale` type to conform to `AnyEquatable` is to tell it to, like so:
+`AnyEquatable` has one method: `func isEqualTo(_ other: Any?) -> Bool` allowing it to be compared to anything. It has a default implementation if the conforming type is already `Equatable`, which means that all you have to do to get an `Equatable` type to conform to `AnyEquatable` is to tell it to, like so:
 
 ```swift
 extension Bool: AnyEquatable {}

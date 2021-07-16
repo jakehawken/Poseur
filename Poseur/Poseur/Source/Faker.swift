@@ -12,20 +12,60 @@ public extension PoseurFunction {
 
 public class Faker<Function: PoseurFunction> {
     
-    func reset() {
-        methodCalls.removeAll()
-        argsAgnosticStubs.removeAll()
-        argsSpecificStubs.removeAll()
-    }
-    
-    //MARK: Spying
+    private var methodCalls = [RecordedCall]()
+    private var argsAgnosticStubs = [Function: Stub]()
+    private var argsSpecificStubs = [Function: [Stub]]()
     
     private struct RecordedCall {
         let function: Function
         let arguments: [Any?]
     }
     
-    private var methodCalls = [RecordedCall]()
+    private struct Stub {
+        let function: Function
+        let argsCheck: Fake.ArgsCheck?
+        let execution: Fake.FunctionCall
+        
+        func argumentsPassCheck(_ args: [Any?]) -> Bool {
+            argsCheck?(args) ?? true
+        }
+    }
+    
+}
+
+// MARK: - Resetting
+
+extension Faker {
+    
+    func reset() {
+        methodCalls.removeAll()
+        argsAgnosticStubs.removeAll()
+        argsSpecificStubs.removeAll()
+    }
+    
+    func resetFunction(_ function: Function) {
+        removeMethodCalls(for: function)
+        removeAllStubs(for: function)
+    }
+    
+    func removeMethodCalls(for function: Function) {
+        methodCalls = methodCalls.filter { $0.function != function }
+    }
+    
+    func removeUniversalStub(for function: Function) {
+        argsAgnosticStubs.removeValue(forKey: function)
+    }
+    
+    func removeAllStubs(for function: Function) {
+        removeUniversalStub(for: function)
+        argsSpecificStubs.removeValue(forKey: function)
+    }
+    
+}
+
+// MARK: - Spying
+
+public extension Faker {
     
     internal func recordCall(_ method: Function, arguments: [Any?]) {
         let call = RecordedCall(function: method, arguments: arguments)
@@ -60,23 +100,13 @@ public class Faker<Function: PoseurFunction> {
     func receivedCall(to function: Function, withArguments args: [Any?]) -> Bool {
         return callCountForFunction(function, withArguments: args) > 0
     }
+}
+
+// MARK: - Stubbing
+
+public extension Faker {
     
-    //MARK: Stubbing
-    
-    private struct Stub {
-        let function: Function
-        let argsCheck: Fake.ArgsCheck?
-        let execution: Fake.FunctionCall
-        
-        func argumentsPassCheck(_ args: [Any?]) -> Bool {
-            argsCheck?(args) ?? true
-        }
-    }
-    
-    private var argsAgnosticStubs = [Function: Stub]()
-    private var argsSpecificStubs = [Function: [Stub]]()
-    
-    func stub(function: Function) -> StubMaker {
+    func stub(function: Function) -> Stubbable {
         return StubMaker { [weak self] (stubbedAction) in
             let stub = Stub(function: function,
                             argsCheck: nil,
@@ -85,7 +115,7 @@ public class Faker<Function: PoseurFunction> {
         }
     }
     
-    func stub(function: Function, where argsCheck: @escaping Fake.ArgsCheck) -> AndReturnable {
+    func stub(function: Function, where argsCheck: @escaping Fake.ArgsCheck) -> Stubbable {
         return StubMaker { [weak self] (stubbedAction) in
             let stub = Stub(function: function,
                             argsCheck: argsCheck,
@@ -99,7 +129,7 @@ public class Faker<Function: PoseurFunction> {
         }
     }
     
-    func stub(function: Function, withArgs args: [Any?]) -> StubMaker {
+    func stub(function: Function, withArgs args: [Any?]) -> Stubbable {
         let argsCheck = argumentWrapperCheck(fromArgs: args)
         return StubMaker { [weak self] (stubbedAction) in
             let stub = Stub(function: function,
@@ -128,6 +158,8 @@ public class Faker<Function: PoseurFunction> {
     
 }
 
+// MARK: - Private / Helpers
+
 private extension Faker {
     
     func argumentWrapperCheck(fromArgs args: [Any?]) -> Fake.ArgsCheck {
@@ -145,12 +177,12 @@ private extension Faker {
     
 }
 
-struct StubMaker: Stubbable {
+private struct StubMaker: Stubbable {
     
     private(set) var actionAdded = false
-    private let callback: (@escaping Fake.FunctionCall) -> ()
+    private let callback: (@escaping Fake.FunctionCall) -> Void
     
-    fileprivate init(_ callback: @escaping (@escaping Fake.FunctionCall) -> ()) {
+    fileprivate init(_ callback: @escaping (@escaping Fake.FunctionCall) -> Void) {
         self.callback = callback
     }
     
@@ -167,12 +199,4 @@ struct StubMaker: Stubbable {
         }
     }
     
-}
-
-public protocol AndReturnable {
-    func andReturn(_ value: Any?)
-}
-
-public protocol Stubbable: AndReturnable {
-    func andDo(_ action: @escaping Fake.FunctionCall)
 }

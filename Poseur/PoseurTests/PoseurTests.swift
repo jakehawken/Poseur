@@ -164,7 +164,7 @@ enum FetchableItem: Equatable {
     case slippers
 }
 
-enum FamilyMember: Equatable {
+enum FamilyMember: Equatable, AnyEquatable {
     case parent
     case kid
 }

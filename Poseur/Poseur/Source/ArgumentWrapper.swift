@@ -4,7 +4,7 @@
 
 import Foundation
 
-struct ArgumentWrapper {
+internal struct ArgumentWrapper {
     
     typealias ArgsMatch = (Any?) -> Bool
     private let matchBlock: ArgsMatch
